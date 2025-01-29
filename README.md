@@ -15,6 +15,10 @@ pip install -r requirements-development.txt
 
 # Copy configuration and change it to your needs (usually not necessary for development)
 cp .env.example .env
+
+# Unpack the compressed model
+cd ./solidarityzone/data
+tar -xzf ./captcha_model.ckpt.tar.gz
 ```
 
 ### Redis
