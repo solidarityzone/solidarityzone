@@ -1,0 +1,71 @@
+version: "3"
+
+volumes:
+  instance:
+
+services:
+  redis:
+    image: redis:5.0.7-alpine
+    container_name: redis
+    restart: always
+
+  server:
+    build: .
+    restart: always
+    volumes:
+      - instance:/home/app/instance
+    env_file: '.env'
+    environment:
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - FLASK_CELERY__broker_url=redis://redis/0
+      - FLASK_CELERY__timezone=${FLASK_CELERY__timezone:-Asia/Yekaterinburg}
+    ports:
+      - ${SERVER_PORT:-8000}:8000
+    command: gunicorn -w 3 -t 60 -b 0.0.0.0:8000 "solidarityzone:init_app()"
+
+  worker:
+    build: .
+    restart: always
+    network_mode: service:vpn
+    volumes:
+      - instance:/home/app/instance
+    env_file: '.env'
+    environment:
+      - FLASK_CELERY__broker_url=redis://redis/0
+      - FLASK_CELERY__timezone=${FLASK_CELERY__timezone:-Asia/Yekaterinburg}
+    command: celery -A solidarityzone worker -c ${CELERY_CONCURRENCY:-4} -l INFO
+
+  scheduler:
+    build: .
+    restart: always
+    volumes:
+      - instance:/home/app/instance
+    env_file: '.env'
+    environment:
+      - FLASK_CELERY__broker_url=redis://redis/0
+      - FLASK_CELERY__timezone=${FLASK_CELERY__timezone:-Asia/Yekaterinburg}
+    command: celery -A solidarityzone beat -l INFO
+
+  monitor:
+    build: .
+    restart: always
+    volumes:
+      - instance:/home/app/instance
+    env_file: '.env'
+    environment:
+      - FLASK_CELERY__broker_url=redis://redis/0
+      - FLASK_CELERY__timezone=${FLASK_CELERY__timezone:-Asia/Yekaterinburg}
+    ports:
+      - ${MONITOR_PORT:-5556}:5556
+    command: celery -A solidarityzone flower --address=0.0.0.0 --port=5556 --url_prefix=${MONITOR_URL_PREFIX:-monitor}
+
+  vpn:
+    build: ./openvpn-cloak-client
+    container_name: vpn
+    volumes:
+      - ./openvpn-config.ovpn:/config/openvpn-config.ovpn
+      - ./cloak-config.json:/config/cloak-config.json
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun

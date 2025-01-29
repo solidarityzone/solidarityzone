@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  openvpn:
+    build: .
+    container_name: openvpn
+    restart: unless-stopped
+    volumes:
+      - ./openvpn-config.ovpn:/config/openvpn-config.ovpn
+      - ./cloak-config.json:/config/cloak-config.json
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun

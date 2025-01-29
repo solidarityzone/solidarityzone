@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/favicon.png') }}">
+    <title>solidarity zone &#8212; scraper</title>
+  </head>
+  <body>
+    <noscript>This page can only be viewed with JavaScript enabled browsers.</noscript>
+    <div id="app" data-version="{{ VERSION }}"></div>
+    <script src="{{ url_for('static', filename='index.js') }}?v={{ VERSION }}"></script>
+  </body>
+</html>
